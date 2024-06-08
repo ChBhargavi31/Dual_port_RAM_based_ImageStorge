@@ -1,0 +1,171 @@
+Xilinx code final:
+
+module ReadHexValuesAndStoreInFile (
+    input wire clk,
+    input wire reset,
+    input wire read_en,
+	 input wire write_en,
+	 
+    input wire [23:0] address,
+    output reg [23:0] data_out
+);
+
+    reg [23:0] mem [0:4096- 1]; // Assuming Total_Pixels memory locations
+    reg [23:0] read_data;
+
+    integer file_handler;
+
+    initial begin
+        $readmemh("hex_pixel_values.txt", mem); // Read data from the hexadecimal file
+        // Open the output file for writing
+        file_handler = $fopen("out_pixel_values1.txt", "w"); 
+    end
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            // Reset values if needed
+            // ...
+
+         end else begin
+            if (read_en) begin
+                // Read data from the dual-port RAM based on the address
+                read_data = mem[address];
+               
+                // Output the read data to the console
+                $display("Read data: %h", read_data);
+               
+                // Write the read data to the output file
+                $display(file_handler, "%h", read_data);
+               
+                // Assign the read data to the output
+                data_out <= read_data;
+            end
+        end
+    end
+
+    initial begin
+        $fclose(file_handler);
+    end
+
+endmodule
+
+
+
+Testbench
+
+`timescale 1ns / 1ps
+module ReadHexValuesAndStoreInFile_tb;
+    reg clk;
+    reg reset;
+    reg read_en;
+    reg [23:0] address;
+    wire [23:0] data_out; // Changed from reg to wire for output
+    // Instantiate the module under test
+    ReadHexValuesAndStoreInFile dut (
+        .clk(clk),
+        .reset(reset),
+        .read_en(read_en),
+        .address(address),
+        .data_out(data_out)
+    );
+
+    // Clock generation
+    always #5 clk = ~clk;
+
+    // Testbench initial block
+    initial begin
+        // Provide a clock signal (adjust frequency if needed)
+        clk = 0;
+
+        // Reset signal initialization
+        reset = 1;
+        #10 reset = 0;
+
+        // Read operation initialization
+        read_en = 1;
+        address = 0;
+
+        // Loop through reading all pixel values (adjust this based on the number of pixels)
+        repeat (4095) begin
+            // Simulating data output from the module
+            #10; // Simulating delay for the module to respond
+
+            // Displaying the pixel value read at the given address
+            $display("Reading pixel value at address %d: %h", address, data_out);
+
+            // Incrementing the address for the next read
+            address = address + 1;
+        end
+
+        // Finish simulation
+        $finish;
+    end
+
+endmodule
+
+
+
+
+
+PYTHON CODE
+pip install Pillow
+from PIL import Image
+
+# Open the image file
+input_image_path = 'C:\\Users\\DELL\\Desktop\\dtlabvlsiproj\\pyim123.jpg'  # Replace with your image path
+image = Image.open(input_image_path)
+
+# Convert image data to a list of hexadecimal pixel values
+pixel_data = list(image.getdata())
+hex_pixel_values = [f'{pixel[0]:02X}{pixel[1]:02X}{pixel[2]:02X}' for pixel in pixel_data]
+
+# Save the hexadecimal pixel values to a file
+output_file_path = 'hex_pixel_values.txt'  # File to save the hexadecimal pixel values
+with open(output_file_path, 'w') as file:
+    file.write('\n'.join(hex_pixel_values))
+
+print(f"Hexadecimal pixel values saved to '{output_file_path}'")
+
+
+
+from PIL import Image
+
+# Read the hexadecimal pixel values from the file
+input_file_path = 'hex_pixel_values.txt'  # Replace with the file containing hex pixel values
+with open(input_file_path, 'r') as file:
+    hex_pixel_values = file.read().splitlines()
+
+# Convert hexadecimal values back to RGB tuples
+pixel_data = [(int(hex_val[i:i + 2], 16), int(hex_val[i + 2:i + 4], 16), int(hex_val[i + 4:i + 6], 16))
+              for hex_val in hex_pixel_values for i in range(0, len(hex_val), 6)]
+
+# Create an image from the RGB pixel data
+width, height = image.size
+recreated_image = Image.new('RGB', (width, height))
+recreated_image.putdata(pixel_data)
+
+# Save the retrieved image
+output_image_path = 'retrieved_image.jpg'  # Replace with the desired output image path
+recreated_image.save(output_image_path)
+
+print(f"Image retrieved and saved to '{output_image_path}'")
+
+
+from PIL import Image
+​
+# Open the image file
+input_image_path = 'C:\\Users\\DELL\\Desktop\\dtlabvlsiproj\\pyim123.jpg'  # Replace with your image path
+image = Image.open(input_image_path)
+​
+# Convert image data to a list of binary pixel values
+pixel_data = list(image.getdata())
+binary_pixel_values = [f'{pixel[0]:08b}{pixel[1]:08b}{pixel[2]:08b}' for pixel in pixel_data]
+​
+# Save the binary pixel values to a file
+output_file_path = 'binary_pixel_values.txt'  # File to save the binary pixel values
+with open(output_file_path, 'w') as file:
+    file.write('\n'.join(binary_pixel_values))
+​
+print(f"Binary pixel values saved to '{output_file_path}'")
+Binary pixel values saved to 'binary_pixel_values.txt'
+​
